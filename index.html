@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UMZH Connect</title>
+  <meta name="description"
+    content="UMZH Connect enables automated, standardized exchange of clinical orders and referrals between Swiss healthcare providers – starting in Zurich, built to scale nationally.">
+  <link rel="icon" href="assets/favicon.ico" sizes="32x32">
+  <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
+  <link rel="preload" href="assets/font_umzh2.p.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+    @font-face {
+      font-family: "UMZH";
+      src: url("assets/font_umzh2.p.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "UMZH";
+      src: url("assets/font_umzh1.p.woff2") format("woff2");
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    /* Metric-adjusted fallback so the layout does not jump while the CI font loads */
+    @font-face {
+      font-family: "UMZH Fallback";
+      src: local("Arial");
+      ascent-override: 90.87%;
+      descent-override: 23.31%;
+      line-gap-override: 0%;
+      size-adjust: 105.09%;
+    }
+
+    :root {
+      --ink: #111111;
+      --ink-2: #232323;
+      --paper: #f5f5f5;
+      --white: #ffffff;
+      --blue: #0000ff;
+      --gutter: clamp(16px, 3vw, 40px);
+      --max: 1440px;
+      --font: "UMZH", "UMZH Fallback", Arial, sans-serif;
+      --h-xl: clamp(2.6rem, 7vw, 6.2rem);
+      --h-l: clamp(2rem, 4.6vw, 3.8rem);
+      --h-m: clamp(1.5rem, 2.6vw, 2.3rem);
+      --t-l: clamp(1.15rem, 1.6vw, 1.4rem);
+    }
+
+    /* Section themes: every component reads these, so sections can be light or dark */
+    body,
+    .paper {
+      --bg: var(--paper);
+      --fg: var(--ink);
+      --muted: #5c5c5c;
+      --rule: rgba(17, 17, 17, 0.9);
+      --rule-soft: rgba(17, 17, 17, 0.15);
+      --chip-bg: var(--ink);
+      --chip-fg: var(--paper);
+      --accent-text: var(--blue);
+      --hover: var(--blue);
+    }
+
+    .ink {
+      --bg: var(--ink);
+      --fg: var(--paper);
+      --muted: #a8a8a8;
+      --rule: rgba(245, 245, 245, 0.45);
+      --rule-soft: rgba(245, 245, 245, 0.2);
+      --chip-bg: var(--paper);
+      --chip-fg: var(--ink);
+      --accent-text: var(--white);
+      /* blue text is too dark on black: white + underline instead */
+      --hover: var(--white);
+    }
+
+    .paper,
+    .ink {
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .blue {
+      background: var(--blue);
+      color: var(--white);
+      --rule: rgba(255, 255, 255, 0.6);
+      --hover: var(--white);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 64px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font);
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 1.35;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* The CI uses a single weight: emphasis comes from size and colour, never bold */
+    h1,
+    h2,
+    h3,
+    h4,
+    strong,
+    b,
+    th {
+      font-weight: 400;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    p,
+    ul,
+    ol,
+    dl,
+    figure {
+      margin: 0;
+    }
+
+    ul,
+    ol {
+      padding: 0;
+      list-style: none;
+    }
+
+    img,
+    svg {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.18em;
+    }
+
+    a:hover {
+      color: var(--hover);
+    }
+
+    .ink a:hover,
+    .blue a:hover {
+      text-decoration-thickness: 2px;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 3px;
+    }
+
+    .ink :focus-visible,
+    .blue :focus-visible {
+      outline-color: var(--white);
+    }
+
+    .skip {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      background: var(--blue);
+      color: var(--white);
+      padding: 12px 16px;
+      z-index: 100;
+    }
+
+    .skip:focus {
+      left: 16px;
+      top: 8px;
+    }
+
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+    }
+
+    section {
+      padding: clamp(64px, 9vw, 128px) 0;
+    }
+
+    .eyebrow {
+      font-size: 15px;
+      letter-spacing: 0.01em;
+      margin-bottom: 20px;
+    }
+
+    .h-xl {
+      font-size: var(--h-xl);
+      line-height: 0.95;
+      letter-spacing: -0.015em;
+    }
+
+    .h-l {
+      font-size: var(--h-l);
+      line-height: 1;
+      letter-spacing: -0.01em;
+    }
+
+    .h-m {
+      font-size: var(--h-m);
+      line-height: 1.08;
+    }
+
+    .lead {
+      font-size: var(--t-l);
+      line-height: 1.35;
+      max-width: 42ch;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    .more {
+      display: inline-block;
+      text-decoration: underline;
+    }
+
+    .more::before {
+      content: "› ";
+    }
+
+    /* ------------------------------------------------------------ header */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(245, 245, 245, 0.97);
+      border-bottom: 1px solid rgba(17, 17, 17, 0.12);
+    }
+
+    .site-header .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      gap: 24px;
+    }
+
+    .brand {
+      font-size: clamp(1.15rem, 2vw, 1.6rem);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .brand:hover {
+      color: var(--ink);
+    }
+
+    .nav {
+      display: flex;
+      gap: 28px;
+      font-size: 16px;
+    }
+
+    .nav a {
+      text-decoration: none;
+    }
+
+    .nav a:hover {
+      text-decoration: underline;
+      color: var(--ink);
+    }
+
+    .menu {
+      display: none;
+      position: relative;
+    }
+
+    .menu summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 8px 0;
+      font-size: 16px;
+    }
+
+    .menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .menu summary .bars {
+      display: inline-block;
+      width: 22px;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+
+    .menu summary .bars i {
+      display: block;
+      height: 1px;
+      background: var(--ink);
+      margin: 5px 0;
+    }
+
+    .menu ul {
+      position: absolute;
+      right: 0;
+      top: 44px;
+      background: var(--ink);
+      color: var(--paper);
+      min-width: 220px;
+      padding: 8px 0;
+    }
+
+    .menu li a {
+      display: block;
+      padding: 12px 20px;
+      text-decoration: none;
+    }
+
+    .menu li a:hover {
+      color: var(--white);
+      text-decoration: underline;
+    }
+
+    @media (max-width: 860px) {
+      .nav {
+        display: none;
+      }
+
+      .menu {
+        display: block;
+      }
+    }
+
+    /* ------------------------------------------------------------ hero */
+    .hero {
+      padding: clamp(48px, 7vw, 96px) 0 0;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: clamp(32px, 5vw, 80px);
+      align-items: center;
+    }
+
+    .hero h1 {
+      margin-bottom: 32px;
+    }
+
+    .hero-figure img {
+      width: 100%;
+    }
+
+    .hero-figure figcaption {
+      font-size: 15px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    .cta-band {
+      margin-top: clamp(48px, 7vw, 96px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .cta-band>* {
+      padding: 28px var(--gutter);
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+      text-decoration: none;
+    }
+
+    .cta-band .big {
+      font-size: var(--h-m);
+      line-height: 1.05;
+    }
+
+    .cta-band a.blue:hover {
+      background: #0000d6;
+      color: var(--white);
+    }
+
+    .cta-band a.dark {
+      background: var(--ink-2);
+      color: var(--paper);
+    }
+
+    .cta-band a.dark:hover {
+      background: #2e2e2e;
+      color: var(--white);
+    }
+
+    @media (max-width: 860px) {
+
+      .hero-grid,
+      .cta-band {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .hero-figure {
+        max-width: 520px;
+      }
+    }
+
+    /* ------------------------------------------------------------ two-column text */
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: clamp(32px, 6vw, 96px);
+    }
+
+    .split-head {
+      margin-bottom: clamp(40px, 5vw, 72px);
+    }
+
+    .block h3 {
+      font-size: var(--h-m);
+      line-height: 1.08;
+      padding-top: 16px;
+      border-top: 1px solid currentColor;
+      margin-bottom: 24px;
+    }
+
+    .dash li {
+      position: relative;
+      padding-left: 1.6em;
+      margin-bottom: 14px;
+      font-size: var(--t-l);
+      line-height: 1.35;
+    }
+
+    .dash li::before {
+      content: "–";
+      position: absolute;
+      left: 0;
+    }
+
+    .dash .hl {
+      color: var(--accent-text);
+    }
+
+    .ink .dash .hl {
+      text-decoration: underline;
+      text-decoration-color: var(--blue);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 0.2em;
+    }
+
+    @media (max-width: 860px) {
+      .split {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* ------------------------------------------------------------ cell grids
+     Numbered/card rows (goals, governance bodies, onboarding steps): a separator
+     before the first cell, between cells and after the last one, and identical
+     padding in every cell. Stacked layouts get separators between rows instead. */
+    .cells {
+      display: grid;
+      border-top: 1px solid var(--rule);
+      border-left: 1px solid var(--sep);
+    }
+
+    .cells>* {
+      padding: var(--cell-pad, 24px);
+      border-right: 1px solid var(--sep);
+    }
+
+    /* ------------------------------------------------------------ goals */
+    .goals {
+      --sep: var(--rule-soft);
+      --cell-pad: 24px 24px 28px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .goal .n {
+      font-size: clamp(3rem, 5vw, 4.5rem);
+      line-height: 1;
+      margin-bottom: 28px;
+      color: var(--accent-text);
+    }
+
+    .goal h3 {
+      font-size: var(--h-m);
+      line-height: 1.08;
+      margin-bottom: 14px;
+    }
+
+    .goal p {
+      color: var(--muted);
+      font-size: 17px;
+      max-width: 34ch;
+    }
+
+    @media (max-width: 860px) {
+      .goals {
+        grid-template-columns: minmax(0, 1fr);
+        border-bottom: 1px solid var(--sep);
+      }
+
+      .goal+.goal {
+        border-top: 1px solid var(--sep);
+      }
+    }
+
+    /* ------------------------------------------------------------ tags */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 28px;
+    }
+
+    .tag {
+      background: var(--chip-bg);
+      color: var(--chip-fg);
+      padding: 3px 8px 4px;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    /* ------------------------------------------------------------ services list */
+    .rows {
+      border-top: 1px solid var(--rule);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: 24px;
+      padding: 22px 0 26px;
+      border-bottom: 1px solid var(--rule);
+      align-items: start;
+    }
+
+    .row h3 {
+      font-size: var(--h-m);
+      line-height: 1.08;
+    }
+
+    .row p {
+      font-size: var(--t-l);
+    }
+
+    .row .tags {
+      margin-top: 0;
+    }
+
+    .row .repo {
+      margin-top: 12px;
+      font-size: 16px;
+    }
+
+    @media (max-width: 860px) {
+      .row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+      }
+    }
+
+    /* ------------------------------------------------------------ principles */
+    .principles {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+    }
+
+    .principle {
+      background: var(--bg);
+      padding: 28px 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 250px;
+      transition: background-color .2s ease, color .2s ease;
+    }
+
+    .principle .n {
+      font-size: 15px;
+      color: var(--muted);
+      transition: color .2s ease;
+    }
+
+    .principle h3 {
+      font-size: var(--h-m);
+      line-height: 1.08;
+    }
+
+    .principle p {
+      color: var(--muted);
+      font-size: 17px;
+      margin-top: auto;
+      transition: color .2s ease;
+    }
+
+    .principle:hover {
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    .principle:hover .n,
+    .principle:hover p {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    @media (max-width: 1100px) {
+      .principles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 620px) {
+      .principles {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .principle {
+        min-height: 0;
+      }
+    }
+
+    /* ------------------------------------------------------------ timeline */
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      position: relative;
+      margin-top: clamp(40px, 5vw, 64px);
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 7px;
+      height: 1px;
+      background: var(--fg);
+    }
+
+    .milestone {
+      position: relative;
+      padding: 36px 20px 0 0;
+    }
+
+    .milestone::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--fg);
+    }
+
+    .milestone.done::before {
+      background: var(--fg);
+    }
+
+    .milestone.now::before {
+      background: var(--blue);
+      border-color: var(--blue);
+      box-shadow: 0 0 0 6px rgba(0, 0, 255, 0.35);
+    }
+
+    .milestone .when {
+      font-size: 15px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .milestone.now .when {
+      color: var(--accent-text);
+    }
+
+    .milestone h3 {
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .phases {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 40px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .phases div {
+      padding: 16px 24px 0 0;
+      font-size: 16px;
+      color: var(--muted);
+    }
+
+    .phases div+div {
+      padding-left: 24px;
+      border-left: 1px solid var(--rule-soft);
+    }
+
+    .phases strong {
+      display: block;
+      font-size: var(--t-l);
+      margin-bottom: 4px;
+      color: var(--fg);
+    }
+
+    @media (max-width: 860px) {
+      .timeline {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .timeline::before {
+        left: 7px;
+        right: auto;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        height: auto;
+      }
+
+      .milestone {
+        padding: 0 0 28px 40px;
+      }
+
+      .milestone::before {
+        top: 2px;
+      }
+
+      .phases {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .phases div+div {
+        padding-left: 0;
+        border-left: 0;
+        padding-top: 16px;
+      }
+    }
+
+    /* ------------------------------------------------------------ governance */
+    .bodies {
+      --sep: var(--rule-soft);
+      --cell-pad: 24px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .gbody {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .gbody .cadence {
+      align-self: flex-start;
+      background: var(--chip-bg);
+      color: var(--chip-fg);
+      padding: 3px 8px 4px;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .gbody h3 {
+      font-size: var(--h-m);
+      line-height: 1.08;
+      margin-top: 12px;
+    }
+
+    .gbody p {
+      font-size: 17px;
+    }
+
+    .gbody .resp {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .gbody .resp li {
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .gbody .resp li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: .68em;
+      width: 10px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .gbody .resp .hl {
+      color: var(--accent-text);
+    }
+
+    .gbody .resp-label {
+      font-size: 15px;
+      color: var(--accent-text);
+      margin-bottom: -6px;
+    }
+
+    .gbody .decides {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid var(--rule-soft);
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .gbody .decides span {
+      display: block;
+      color: var(--accent-text);
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .pilot {
+      margin-top: clamp(40px, 5vw, 64px);
+      padding-top: 18px;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px 48px;
+      align-items: baseline;
+    }
+
+    .pilot p {
+      max-width: 70ch;
+      font-size: 17px;
+      color: var(--muted);
+    }
+
+    .pilot p span {
+      color: var(--fg);
+      margin-right: 12px;
+    }
+
+    .pilot .more {
+      font-size: 17px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 1100px) {
+      .bodies {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        border-bottom: 1px solid var(--sep);
+      }
+
+      .gbody:nth-child(n+3) {
+        border-top: 1px solid var(--sep);
+      }
+    }
+
+    @media (max-width: 620px) {
+      .bodies {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .gbody+.gbody {
+        border-top: 1px solid var(--sep);
+      }
+    }
+
+    /* ------------------------------------------------------------ join */
+    .steps {
+      --sep: var(--rule);
+      --cell-pad: 20px 20px 24px;
+      counter-reset: step;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .steps li {
+      counter-increment: step;
+      font-size: var(--t-l);
+      line-height: 1.25;
+    }
+
+    .steps li::before {
+      content: counter(step, decimal-leading-zero);
+      display: block;
+      font-size: 15px;
+      margin-bottom: 28px;
+      opacity: 0.8;
+    }
+
+    .commit {
+      margin-top: clamp(40px, 5vw, 64px);
+    }
+
+    .commit h3 {
+      font-size: var(--h-m);
+      margin-bottom: 18px;
+    }
+
+    .commit ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .commit li {
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      padding: 6px 12px 7px;
+      font-size: 16px;
+    }
+
+    @media (max-width: 860px) {
+      .steps {
+        grid-template-columns: minmax(0, 1fr);
+        border-bottom: 1px solid var(--sep);
+        --cell-pad: 16px 20px 18px;
+      }
+
+      .steps li+li {
+        border-top: 1px solid var(--sep);
+      }
+
+      .steps li::before {
+        margin-bottom: 8px;
+      }
+    }
+
+    /* ------------------------------------------------------------ docs + contact */
+    .docs {
+      border-top: 1px solid var(--rule);
+    }
+
+    .docs a {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+      gap: 24px;
+      padding: 18px 0 20px;
+      border-bottom: 1px solid var(--rule);
+      text-decoration: none;
+      align-items: baseline;
+    }
+
+    .docs a .t {
+      font-size: var(--t-l);
+    }
+
+    .docs a .t::before {
+      content: "› ";
+    }
+
+    .docs a .d {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .docs a:hover .t {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 620px) {
+      .docs a {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 4px;
+      }
+    }
+
+    .people {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .person {
+      border-top: 1px solid var(--rule);
+      padding-top: 18px;
+      font-size: 16px;
+      line-height: 1.45;
+    }
+
+    .person .name {
+      font-size: var(--t-l);
+      margin-bottom: 8px;
+    }
+
+    .person .muted {
+      display: block;
+    }
+
+    @media (max-width: 620px) {
+      .people {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* ------------------------------------------------------------ footer */
+    .site-footer {
+      padding: 40px 0 48px;
+      font-size: 15px;
+    }
+
+    .partners {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 18px 36px;
+      padding-bottom: 28px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .partners img {
+      height: 40px;
+      width: auto;
+    }
+
+    @media (max-width: 620px) {
+      .partners img {
+        height: 32px;
+      }
+    }
+
+    .legal {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+    }
+
+    .legal p {
+      max-width: 70ch;
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="#top">UMZH Connect</a>
+      <nav class="nav" aria-label="Main">
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#principles">Principles</a>
+        <a href="#governance">Governance</a>
+        <a href="#timeline">Timeline</a>
+        <a href="#join">Join</a>
+      </nav>
+      <details class="menu">
+        <summary aria-label="Open menu">Menu<span class="bars" aria-hidden="true"><i></i><i></i></span></summary>
+        <ul>
+          <li><a href="#about">About</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#principles">Principles</a></li>
+          <li><a href="#governance">Governance</a></li>
+          <li><a href="#timeline">Timeline</a></li>
+          <li><a href="#join">Join</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </details>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============================================================ HERO -->
+    <section class="hero paper" id="top">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div>
+            <p class="eyebrow">An initiative of University Medicine Zurich UMZH</p>
+            <h1 class="h-xl">Digital interoperability for Swiss healthcare providers</h1>
+            <p class="lead">Starting with the Zurich university hospitals, built to scale nationally. Clinical orders
+              and referrals move between providers automatically – over open, standardized FHIR&nbsp;APIs.</p>
+          </div>
+          <figure class="hero-figure">
+            <img src="assets/umzh-connect-ecosystem.svg" width="601" height="562"
+              alt="UMZH Connect ecosystem: hospitals such as Hospital A (KIS) and Hospital B (KIS, LIS) and GP practices (PIS) exchange data directly through their own APIs. Shared services in the middle provide authorization, registry and consent based on SMART on FHIR and OpenID, built on eHealth Suisse and HL7 FHIR standards.">
+            <figcaption>Providers exchange data directly, API to API – shared services provide only trust and discovery.
+            </figcaption>
+          </figure>
+        </div>
+        <div class="goals cells" style="margin-top: clamp(48px, 6vw, 88px)">
+          <div class="goal">
+            <div class="n">01</div>
+            <h3>Automate</h3>
+            <p>Automated, standardized clinical order and referral workflows between healthcare providers.</p>
+          </div>
+          <div class="goal">
+            <div class="n">02</div>
+            <h3>Standardize nationally</h3>
+            <p>A nation-wide standard for digital clinical orders, built on CH Core, CH eTOC, CH ORF, CH ELM and the
+              international COW IG.</p>
+          </div>
+          <div class="goal">
+            <div class="n">03</div>
+            <h3>Hand over</h3>
+            <p>Mid-term, hand over the maintained artifacts and operated services to national initiatives – so the
+              standard outlives its regional origin.</p>
+          </div>
+        </div>
+      </div>
+      <div class="cta-band">
+        <a class="blue" href="https://build.fhir.org/ig/umzhconnect/umzhconnect-ig/">
+          <span>The data contract</span>
+          <span class="big">Read the Implementation&nbsp;Guide&nbsp;›</span>
+        </a>
+        <a class="dark" href="#join">
+          <span>Hospitals, practices and labs</span>
+          <span class="big">Become a participant&nbsp;›</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ============================================================ ABOUT -->
+    <section class="paper" id="about">
+      <div class="wrap">
+        <div class="split split-head">
+          <h2 class="h-l">What is UMZH Connect?</h2>
+          <p class="lead">An initiative and stewarding organisation, funded and mandated by UMZH. We develop the shared
+            standard, operate the shared services and govern the onboarding of new participants.</p>
+        </div>
+        <div class="split">
+          <div class="block">
+            <h3>The problem</h3>
+            <ul class="dash">
+              <li>Referrals, transfers and external orders – lab, radiology – still require <span class="hl">manual
+                  re-entry</span> of clinical and administrative data across systems.</li>
+              <li>The result: <span class="hl">delays, inconsistencies and avoidable workload</span>.</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>The solution</h3>
+            <ul class="dash">
+              <li><span class="hl">“Push-button” and fully automated data exchange</span> between providers over
+                standardized FHIR / REST APIs.</li>
+              <li><span class="hl">One data contract</span>: a FHIR Implementation Guide based on the international
+                Clinical Order Workflow (COW), adapted to Swiss specifics.</li>
+              <li><span class="hl">Data stays with the provider</span> – partners access only what an order needs.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="split" style="margin-top: clamp(64px, 8vw, 112px)">
+          <div class="block">
+            <h3>Use-case driven, not technology driven</h3>
+            <ul class="dash">
+              <li>Each use case defines the <span class="hl">data structures</span> and the <span
+                  class="hl">workflow</span> – the API operations the collaboration needs.</li>
+              <li>Use cases are <span class="hl">prioritized by clinical and business value</span>.</li>
+              <li>Each is documented in the Implementation Guide – for example <span class="hl">orthopedic</span> and
+                <span class="hl">sarcoma tumor-board referrals</span>.</li>
+            </ul>
+          </div>
+          <div class="block">
+            <h3>Lowering the entry barrier</h3>
+            <ul class="dash">
+              <li>Each participant runs its own IG-conformant FHIR API.</li>
+              <li>Open-source <span class="hl">reference implementations</span> – sandbox and party stack, including
+                KIS/PIS plug-ins – help providers comply with the IG and integrate their existing systems.</li>
+            </ul>
+            <div class="tags" aria-label="Standards">
+              <span class="tag">HL7 FHIR</span><span class="tag">Clinical Order Workflow</span><span class="tag">CH
+                Core</span><span class="tag">CH eTOC</span><span class="tag">OAuth 2.0</span><span class="tag">SMART on
+                FHIR</span><span class="tag">IHE mCSD</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================ SERVICES -->
+    <section class="ink" id="services">
+      <div class="wrap">
+        <div class="split split-head">
+          <h2 class="h-l">What we govern and operate</h2>
+          <p class="lead">Everything is published open source and open for contribution by the community.</p>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <h3>Implementation Guide</h3>
+            <div>
+              <p>The binding data contract: use cases, data structures, API operations and security.</p>
+              <p class="repo"><a class="more" href="https://build.fhir.org/ig/umzhconnect/umzhconnect-ig/">Read the
+                  IG</a>&nbsp;&nbsp;<a class="more"
+                  href="https://github.com/umzhconnect/umzhconnect-ig">umzhconnect-ig</a></p>
+            </div>
+            <div class="tags"><span class="tag">Artifact</span><span class="tag">CC0 1.0</span></div>
+          </div>
+          <div class="row">
+            <h3>mCSD Registry</h3>
+            <div>
+              <p>Public, read-only directory of participants, the services they provide and their endpoints.</p>
+              <p class="repo"><a class="more"
+                  href="https://github.com/umzhconnect/umzhconnect-registry">umzhconnect-registry</a></p>
+            </div>
+            <div class="tags"><span class="tag">Shared service</span><span class="tag">IHE mCSD</span></div>
+          </div>
+          <div class="row">
+            <h3>Authorization Server</h3>
+            <div>
+              <p>Secure machine-to-machine access, central onboarding and security management.</p>
+              <p class="repo"><a class="more"
+                  href="https://github.com/umzhconnect/umzhconnect-auth">umzhconnect-auth</a></p>
+            </div>
+            <div class="tags"><span class="tag">Shared service</span><span class="tag">OAuth 2.0</span><span
+                class="tag">SMART on FHIR</span></div>
+          </div>
+          <div class="row">
+            <h3>Sandbox &amp; Party Stack</h3>
+            <div>
+              <p>Reference implementations that speed up integration with existing systems.</p>
+              <p class="repo"><a class="more"
+                  href="https://github.com/umzhconnect/umzhconnect-sandbox">umzhconnect-sandbox</a>&nbsp;&nbsp;<a
+                  class="more" href="https://github.com/umzhconnect/umzhconnect-cow">umzhconnect-cow</a></p>
+            </div>
+            <div class="tags"><span class="tag">Technical aid</span><span class="tag">Open source</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ PRINCIPLES -->
+    <section class="paper" id="principles">
+      <div class="wrap">
+        <div class="split split-head">
+          <h2 class="h-l">Operating principles</h2>
+          <p class="lead muted">Open, standards-based and accountable governance makes UMZH Connect a trusted foundation
+            for Swiss healthcare interoperability.</p>
+        </div>
+        <div class="principles">
+          <div class="principle">
+            <span class="n">01</span>
+            <h3>Standards first</h3>
+            <p>Built on HL7 FHIR and Swiss national IGs. The IG is balloted through HL7 CH, with adoption as an HL7 CH
+              IG as the next step.</p>
+          </div>
+          <div class="principle">
+            <span class="n">02</span>
+            <h3>Open</h3>
+            <p>Open specifications and open-source artifacts. The Implementation Guide is published under CC0 1.0.</p>
+          </div>
+          <div class="principle">
+            <span class="n">03</span>
+            <h3>Security and data protection by design</h3>
+            <p>Built into architecture, access and governance: no central data store, access only to what is released
+              for an order, and a mandatory review for every change and new participant.</p>
+          </div>
+          <div class="principle">
+            <span class="n">04</span>
+            <h3>Lean, accountable governance</h3>
+            <p>Steering Committee, Technical Office, Working Groups and Participant Assembly – lean during the pilot,
+              scaling with the network.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ TIMELINE -->
+    <section class="ink" id="timeline">
+      <div class="wrap">
+        <div class="split split-head" style="margin-bottom: 0">
+          <h2 class="h-l">From concept to pilot within a year</h2>
+          <p class="lead">Phase I delivers the specification and the pilot. Phase II extends the ecosystem and the use
+            cases.</p>
+        </div>
+        <ol class="timeline">
+          <li class="milestone done">
+            <p class="when">August 2025</p>
+            <h3>Project start</h3>
+          </li>
+          <li class="milestone done">
+            <p class="when">April 2026</p>
+            <h3>Concept &amp; specification</h3>
+          </li>
+          <li class="milestone now">
+            <p class="when">Q4 2026 · now</p>
+            <h3>Pilot roll-out: USZ &amp; Balgrist</h3>
+          </li>
+          <li class="milestone">
+            <p class="when">Q1 2027</p>
+            <h3>Committed participants: PUK &amp; KiSpi</h3>
+          </li>
+          <li class="milestone">
+            <p class="when">Mid 2027</p>
+            <h3>Pilot with SwissHDS</h3>
+          </li>
+          <li class="milestone">
+            <p class="when">End 2027</p>
+            <h3>Live operation with extended ecosystem</h3>
+          </li>
+        </ol>
+        <div class="phases">
+          <div><strong>Phase I</strong>From concept to pilot within a year</div>
+          <div><strong>Phase II</strong>Extending the ecosystem and use cases</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ GOVERNANCE -->
+    <section class="paper" id="governance">
+      <div class="wrap">
+        <div class="split split-head">
+          <h2 class="h-l">Governance</h2>
+          <p class="lead">Lightweight but accountable: the smallest governance that works – clear owners, short paths
+            and written decisions. UMZH provides the mandate and budget.</p>
+        </div>
+
+        <div class="bodies cells">
+          <div class="gbody">
+            <span class="cadence">Quarterly</span>
+            <h3>Steering Committee</h3>
+            <p>Strategic authority and last point of escalation; accountable for the handover.</p>
+          </div>
+          <div class="gbody">
+            <span class="cadence">Weekly</span>
+            <h3>Technical Office</h3>
+            <p>The core team, appointed by the Steering Committee.</p>
+          </div>
+          <div class="gbody">
+            <span class="cadence">Bi-weekly to monthly</span>
+            <h3>Working Groups</h3>
+            <p>Where analysis, design and recommendations happen – organized by the Technical Office, open to delegates
+              of every participant.</p>
+          </div>
+          <div class="gbody">
+            <span class="cadence">Semi-annual</span>
+            <h3>Participant Assembly</h3>
+            <p>The voice of all onboarded participants; elects participant representatives to the Steering Committee.
+            </p>
+          </div>
+        </div>
+
+        <div class="pilot">
+          <a class="more" href="governance-blueprint.md">Read the full operating model</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ JOIN -->
+    <section class="blue" id="join">
+      <div class="wrap">
+        <div class="split split-head">
+          <h2 class="h-xl">Join us</h2>
+          <p class="lead">Healthcare providers – hospitals today, practices and labs later – join through a governed
+            onboarding pipeline.</p>
+        </div>
+        <ol class="steps cells">
+          <li>Apply</li>
+          <li>Conformance testing</li>
+          <li>Security &amp; data-protection review</li>
+          <li>Registry entry &amp; credentials</li>
+          <li>Go-live</li>
+        </ol>
+        <div class="commit">
+          <h3>Membership commitments</h3>
+          <ul>
+            <li>Governance participation</li>
+            <li>HL7 CH membership</li>
+            <li>IG-conformant APIs for your roles and use cases</li>
+            <li>Open-source contribution</li>
+            <li>Financial contribution (if applicable)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ DOCS -->
+    <section class="paper" id="docs">
+      <div class="wrap">
+        <div class="split split-head">
+          <h2 class="h-l">Documentation</h2>
+          <p class="lead">Want to contribute to the standard? Raise a change request or join a Working Group – the
+            Participant Assembly and Working Groups are open to delegates from every participating organisation.</p>
+        </div>
+        <nav class="docs" aria-label="Documentation">
+          <a href="governance-blueprint.md"><span class="t">Governance</span><span class="d">The operating model:
+              bodies, roles, decisions, change management, onboarding, funding and handover.</span></a>
+          <a href="https://github.com/umzhconnect/umzhconnect-ig"><span class="t">Implementation Guide</span><span
+              class="d">The binding data contract – source repository of the FHIR Implementation Guide.</span></a>
+          <a href="https://sandbox.umzhconnect.ch"><span class="t">Sandbox</span><span class="d">The hosted sandbox for
+              testing integrations against the reference implementation.</span></a>
+          <a href="https://github.com/umzhconnect/umzhconnect-cow"><span class="t">Reference Architecture</span><span
+              class="d">Open-source reference implementation of the Clinical Order Workflow.</span></a>
+        </nav>
+      </div>
+    </section>
+
+    <!-- ============================================================ CONTACT -->
+    <section class="ink" id="contact">
+      <div class="wrap">
+        <div class="split">
+          <h2 class="h-l">Contact</h2>
+          <div class="people">
+            <div class="person">
+              <p class="name">Dr. Michael Rebsamen</p>
+              <span class="muted">Balgrist University Hospital</span>
+              <span class="muted">Forchstrasse 340, 8008 Zürich</span>
+              <a href="mailto:michael.rebsamen@balgrist.ch">michael.rebsamen@balgrist.ch</a>
+            </div>
+            <div class="person">
+              <p class="name">Andreas Ahlm</p>
+              <span class="muted">University Hospital Zurich, Direktion ICT</span>
+              <span class="muted">Sonnentalstrasse 25, 8600 Dübendorf</span>
+              <a href="mailto:andreas.ahlm@usz.ch">andreas.ahlm@usz.ch</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer ink">
+    <div class="wrap">
+      <p class="partners" aria-label="UMZH partner institutions">
+        <img src="assets/logos/uzh.svg" alt="University of Zurich">
+        <img src="assets/logos/eth.svg" alt="ETH Zurich">
+        <img src="assets/logos/usz.svg" alt="University Hospital Zurich">
+        <img src="assets/logos/puk.svg" alt="Psychiatric University Hospital Zurich">
+        <img src="assets/logos/balgrist.svg" alt="Balgrist University Hospital">
+        <img src="assets/logos/kispi.svg" alt="University Children’s Hospital Zurich">
+      </p>
+      <div class="legal">
+        <p>UMZH Connect is funded and mandated by University Medicine Zurich UMZH. Specifications and artifacts are
+          published under open licenses; the Implementation Guide is licensed under CC0 1.0.</p>
+        <p>HL7®, FHIR® and the FHIR logo are trademarks of Health Level Seven International.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+
+</html>
